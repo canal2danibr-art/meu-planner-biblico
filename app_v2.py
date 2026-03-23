@@ -1,6 +1,6 @@
 import streamlit as st
 import json
-from planner_data_lofi import PLANNER_DATA_LOFI
+from planner_data import PLANNER_DATA_LOFI
 
 # Configuração da página
 st.set_page_config(
@@ -11,7 +11,6 @@ st.set_page_config(
 )
 
 # ============= PALETA DE CORES LOFI =============
-# Cores pastéis suaves: Bege, Verde Oliva, Azul Acinzentado
 COLORS = {
     "bege": "#E8DCC8",
     "verde_oliva": "#7A9B6F",
@@ -42,7 +41,6 @@ st.markdown(f"""
         background-color: {COLORS['branco']};
     }}
     
-    /* Header Principal */
     .header-container {{
         text-align: center;
         margin-bottom: 2rem;
@@ -72,7 +70,6 @@ st.markdown(f"""
         letter-spacing: 1px;
     }}
     
-    /* Seções de Conteúdo */
     .section-box {{
         background-color: {COLORS['branco']};
         border-left: 4px solid {COLORS['verde_oliva']};
@@ -131,7 +128,6 @@ st.markdown(f"""
         margin: 1rem 0;
     }}
     
-    /* Inputs e Textareas */
     .stTextArea textarea {{
         background-color: {COLORS['branco']};
         border: 1px solid {COLORS['bege']};
@@ -150,7 +146,6 @@ st.markdown(f"""
         font-size: 1em;
     }}
     
-    /* Botões */
     .stButton>button {{
         background-color: {COLORS['verde_oliva']};
         color: white;
@@ -169,7 +164,6 @@ st.markdown(f"""
         background-color: {COLORS['azul_cinzento']};
     }}
     
-    /* Navegação */
     .nav-container {{
         display: flex;
         justify-content: space-between;
@@ -189,17 +183,14 @@ st.markdown(f"""
         flex: 2;
     }}
     
-    /* Progress Bar */
     .stProgress {{
         margin: 2rem 0;
     }}
     
-    /* Espaço em Branco Intencional */
     .spacer {{
         margin: 2rem 0;
     }}
     
-    /* Rodapé */
     .footer {{
         text-align: center;
         color: {COLORS['texto_claro']};
@@ -210,7 +201,6 @@ st.markdown(f"""
         font-style: italic;
     }}
     
-    /* Tema da Semana */
     .week-theme {{
         text-align: center;
         font-size: 0.9em;
@@ -220,7 +210,6 @@ st.markdown(f"""
         margin-bottom: 1rem;
     }}
     
-    /* Checklist */
     .checklist-item {{
         padding: 0.8rem 0;
         border-bottom: 1px solid {COLORS['bege']};
@@ -244,13 +233,11 @@ def get_day_data(day):
     return PLANNER_DATA_LOFI[day - 1]
 
 def save_user_data(day, data_type, value):
-    """Salva dados do usuário para um dia específico"""
     if str(day) not in st.session_state.user_data:
         st.session_state.user_data[str(day)] = {}
     st.session_state.user_data[str(day)][data_type] = value
 
 def get_user_data(day, data_type):
-    """Recupera dados do usuário para um dia específico"""
     if str(day) in st.session_state.user_data:
         return st.session_state.user_data[str(day)].get(data_type, "")
     return ""
@@ -392,7 +379,6 @@ st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
 
 # ============= BOTÃO DE SALVAR =============
 if st.button("💾 Save My Reflection"):
-    # Salvar todos os dados do dia
     save_user_data(st.session_state.current_day, "reflection", reflection_text)
     save_user_data(st.session_state.current_day, "gratitude_1", gratitude_1)
     save_user_data(st.session_state.current_day, "gratitude_2", gratitude_2)
