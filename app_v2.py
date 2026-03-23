@@ -1,8 +1,8 @@
 import streamlit as st
 import json
-from planner_data import PLANNER_DATA
+from planner_data_lofi import PLANNER_DATA_LOFI
 
-# Configuração da página para ser mobile-friendly
+# Configuração da página
 st.set_page_config(
     page_title="30-Day Prayer Planner",
     page_icon="🕊️",
@@ -10,127 +10,427 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS para um visual limpo e profissional
-st.markdown("""
+# ============= PALETA DE CORES LOFI =============
+# Cores pastéis suaves: Bege, Verde Oliva, Azul Acinzentado
+COLORS = {
+    "bege": "#E8DCC8",
+    "verde_oliva": "#7A9B6F",
+    "azul_cinzento": "#8B9BA8",
+    "branco": "#FEFDFB",
+    "texto_escuro": "#4A4A4A",
+    "texto_claro": "#8B8B8B",
+    "accent_gold": "#C9A961"
+}
+
+# ============= ESTILOS CSS MINIMALISTAS =============
+st.markdown(f"""
     <style>
-    .main { padding: 1rem; }
-    .stButton>button {
-        width: 100%;
-        background-color: #4CAF50;
-        color: white;
-        border-radius: 8px;
-        padding: 12px;
-        font-weight: bold;
-    }
-    .verse-box {
-        background-color: #f0f7f4;
-        border-left: 5px solid #4CAF50;
-        padding: 20px;
-        margin: 20px 0;
-        border-radius: 5px;
-    }
-    .reflection-box {
-        background-color: #fffdf0;
-        border-left: 5px solid #ffd700;
-        padding: 20px;
-        margin: 20px 0;
-        border-radius: 5px;
-    }
-    .prayer-box {
-        background-color: #f0f4f8;
-        border-left: 5px solid #4169e1;
-        padding: 20px;
-        margin: 20px 0;
-        border-radius: 5px;
-    }
-    .day-header {
+    * {{
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }}
+    
+    body {{
+        background-color: {COLORS['branco']};
+        font-family: 'Georgia', 'Garamond', serif;
+        color: {COLORS['texto_escuro']};
+    }}
+    
+    .main {{
+        padding: 2rem 1rem;
+        background-color: {COLORS['branco']};
+    }}
+    
+    /* Header Principal */
+    .header-container {{
         text-align: center;
-        color: #2c3e50;
-        margin-bottom: 30px;
-    }
+        margin-bottom: 2rem;
+        padding: 2rem 0;
+        border-bottom: 2px solid {COLORS['bege']};
+    }}
+    
+    .header-title {{
+        font-size: 2.5em;
+        color: {COLORS['verde_oliva']};
+        font-weight: 300;
+        letter-spacing: 2px;
+        margin-bottom: 0.5rem;
+    }}
+    
+    .header-subtitle {{
+        font-size: 1em;
+        color: {COLORS['texto_claro']};
+        font-weight: 300;
+        font-style: italic;
+    }}
+    
+    .day-indicator {{
+        font-size: 0.9em;
+        color: {COLORS['azul_cinzento']};
+        margin-top: 1rem;
+        letter-spacing: 1px;
+    }}
+    
+    /* Seções de Conteúdo */
+    .section-box {{
+        background-color: {COLORS['branco']};
+        border-left: 4px solid {COLORS['verde_oliva']};
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border-radius: 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }}
+    
+    .section-title {{
+        font-size: 0.85em;
+        color: {COLORS['verde_oliva']};
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }}
+    
+    .verse-box {{
+        background-color: {COLORS['bege']};
+        border-left: 4px solid {COLORS['verde_oliva']};
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border-radius: 0;
+    }}
+    
+    .verse-reference {{
+        font-size: 0.9em;
+        color: {COLORS['verde_oliva']};
+        font-weight: 600;
+        margin-bottom: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }}
+    
+    .verse-text {{
+        font-size: 1.1em;
+        color: {COLORS['texto_escuro']};
+        font-style: italic;
+        line-height: 1.8;
+        margin: 1rem 0;
+    }}
+    
+    .reflection-box {{
+        background-color: {COLORS['branco']};
+        border-left: 4px solid {COLORS['azul_cinzento']};
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }}
+    
+    .reflection-question {{
+        font-size: 1em;
+        color: {COLORS['texto_escuro']};
+        font-style: italic;
+        line-height: 1.6;
+        margin: 1rem 0;
+    }}
+    
+    /* Inputs e Textareas */
+    .stTextArea textarea {{
+        background-color: {COLORS['branco']};
+        border: 1px solid {COLORS['bege']};
+        color: {COLORS['texto_escuro']};
+        font-family: 'Georgia', serif;
+        border-radius: 0;
+        padding: 1rem;
+    }}
+    
+    .stCheckbox {{
+        margin: 0.5rem 0;
+    }}
+    
+    .stCheckbox label {{
+        color: {COLORS['texto_escuro']};
+        font-size: 1em;
+    }}
+    
+    /* Botões */
+    .stButton>button {{
+        background-color: {COLORS['verde_oliva']};
+        color: white;
+        border: none;
+        border-radius: 0;
+        padding: 0.8rem 2rem;
+        font-size: 0.95em;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        width: 100%;
+        transition: background-color 0.3s ease;
+    }}
+    
+    .stButton>button:hover {{
+        background-color: {COLORS['azul_cinzento']};
+    }}
+    
+    /* Navegação */
+    .nav-container {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 2rem 0;
+        gap: 1rem;
+    }}
+    
+    .nav-button {{
+        flex: 1;
+    }}
+    
+    .day-counter {{
+        text-align: center;
+        font-size: 0.9em;
+        color: {COLORS['texto_claro']};
+        flex: 2;
+    }}
+    
+    /* Progress Bar */
+    .stProgress {{
+        margin: 2rem 0;
+    }}
+    
+    /* Espaço em Branco Intencional */
+    .spacer {{
+        margin: 2rem 0;
+    }}
+    
+    /* Rodapé */
+    .footer {{
+        text-align: center;
+        color: {COLORS['texto_claro']};
+        font-size: 0.85em;
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid {COLORS['bege']};
+        font-style: italic;
+    }}
+    
+    /* Tema da Semana */
+    .week-theme {{
+        text-align: center;
+        font-size: 0.9em;
+        color: {COLORS['accent_gold']};
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
+    }}
+    
+    /* Checklist */
+    .checklist-item {{
+        padding: 0.8rem 0;
+        border-bottom: 1px solid {COLORS['bege']};
+    }}
+    
+    .checklist-item:last-child {{
+        border-bottom: none;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
-# Inicialização do estado do aplicativo
+# ============= INICIALIZAÇÃO DO ESTADO =============
 if 'current_day' not in st.session_state:
     st.session_state.current_day = 1
 
-# Carregar notas do Local Storage (simulado via session_state para esta versão)
-if 'user_notes' not in st.session_state:
-    st.session_state.user_notes = {}
+if 'user_data' not in st.session_state:
+    st.session_state.user_data = {}
 
-# Título Principal
-st.markdown('<h1 class="day-header">🕊️ 30-Day Prayer & Meditation</h1>', unsafe_allow_html=True)
+# ============= FUNÇÕES AUXILIARES =============
+def get_day_data(day):
+    return PLANNER_DATA_LOFI[day - 1]
 
-# Navegação entre os dias
-col_prev, col_day, col_next = st.columns([1, 2, 1])
+def save_user_data(day, data_type, value):
+    """Salva dados do usuário para um dia específico"""
+    if str(day) not in st.session_state.user_data:
+        st.session_state.user_data[str(day)] = {}
+    st.session_state.user_data[str(day)][data_type] = value
 
-with col_prev:
-    if st.button("←", key="prev"):
+def get_user_data(day, data_type):
+    """Recupera dados do usuário para um dia específico"""
+    if str(day) in st.session_state.user_data:
+        return st.session_state.user_data[str(day)].get(data_type, "")
+    return ""
+
+# ============= INTERFACE PRINCIPAL =============
+
+# Header
+st.markdown(f"""
+<div class="header-container">
+    <div class="header-title">🕊️ 30-Day Prayer Planner</div>
+    <div class="header-subtitle">A Journey to Peace, Identity & Purpose in Christ</div>
+    <div class="day-indicator">Day {st.session_state.current_day} of 30</div>
+</div>
+""", unsafe_allow_html=True)
+
+# Obter dados do dia
+day_data = get_day_data(st.session_state.current_day)
+
+# Tema da Semana
+st.markdown(f'<div class="week-theme">Week {day_data["week"]}: {day_data["week_theme"]}</div>', unsafe_allow_html=True)
+
+# Título do Dia
+st.markdown(f"## {day_data['title']}")
+
+# Progresso
+progress_value = st.session_state.current_day / 30
+st.progress(progress_value)
+
+# ============= SEÇÃO 1: VERSÍCULO DO DIA =============
+st.markdown(f"""
+<div class="verse-box">
+    <div class="verse-reference">📖 {day_data['verse']}</div>
+    <div class="verse-text">"{day_data['verse_text']}"</div>
+</div>
+""", unsafe_allow_html=True)
+
+# Espaço em branco intencional
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
+
+# ============= SEÇÃO 2: REFLEXÃO GUIADA =============
+st.markdown(f"""
+<div class="reflection-box">
+    <div class="section-title">💭 Reflection</div>
+    <div class="reflection-question">{day_data['reflection_question']}</div>
+</div>
+""", unsafe_allow_html=True)
+
+# Campo de entrada para reflexão
+reflection_text = st.text_area(
+    "Your thoughts:",
+    value=get_user_data(st.session_state.current_day, "reflection"),
+    height=100,
+    key=f"reflection_{st.session_state.current_day}",
+    label_visibility="collapsed"
+)
+
+# ============= SEÇÃO 3: ESPAÇO DE GRATIDÃO =============
+st.markdown("""
+<div class="section-box">
+    <div class="section-title">🙏 Gratitude</div>
+    <p style="color: #8B8B8B; font-size: 0.9em; margin-bottom: 1rem;">List 3 blessings you're grateful for today:</p>
+</div>
+""", unsafe_allow_html=True)
+
+gratitude_1 = st.text_input(
+    "Blessing 1:",
+    value=get_user_data(st.session_state.current_day, "gratitude_1"),
+    key=f"gratitude_1_{st.session_state.current_day}",
+    label_visibility="collapsed"
+)
+
+gratitude_2 = st.text_input(
+    "Blessing 2:",
+    value=get_user_data(st.session_state.current_day, "gratitude_2"),
+    key=f"gratitude_2_{st.session_state.current_day}",
+    label_visibility="collapsed"
+)
+
+gratitude_3 = st.text_input(
+    "Blessing 3:",
+    value=get_user_data(st.session_state.current_day, "gratitude_3"),
+    key=f"gratitude_3_{st.session_state.current_day}",
+    label_visibility="collapsed"
+)
+
+# Espaço em branco
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
+
+# ============= SEÇÃO 4: MINHAS ORAÇÕES =============
+st.markdown("""
+<div class="section-box">
+    <div class="section-title">🕊️ My Prayers</div>
+</div>
+""", unsafe_allow_html=True)
+
+prayer_text = st.text_area(
+    "Write your prayers and intercessions:",
+    value=get_user_data(st.session_state.current_day, "prayer"),
+    height=120,
+    key=f"prayer_{st.session_state.current_day}",
+    label_visibility="collapsed"
+)
+
+# Espaço em branco
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
+
+# ============= SEÇÃO 5: CHECKLIST DE AUTOCUIDADO ESPIRITUAL =============
+st.markdown("""
+<div class="section-box">
+    <div class="section-title">✓ Spiritual Self-Care Checklist</div>
+</div>
+""", unsafe_allow_html=True)
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    prayed = st.checkbox(
+        "Prayed",
+        value=get_user_data(st.session_state.current_day, "prayed") == True,
+        key=f"prayed_{st.session_state.current_day}"
+    )
+
+with col2:
+    read_word = st.checkbox(
+        "Read God's Word",
+        value=get_user_data(st.session_state.current_day, "read_word") == True,
+        key=f"read_word_{st.session_state.current_day}"
+    )
+
+with col3:
+    worship_music = st.checkbox(
+        "Worship Music",
+        value=get_user_data(st.session_state.current_day, "worship_music") == True,
+        key=f"worship_music_{st.session_state.current_day}"
+    )
+
+# Espaço em branco
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
+
+# ============= BOTÃO DE SALVAR =============
+if st.button("💾 Save My Reflection"):
+    # Salvar todos os dados do dia
+    save_user_data(st.session_state.current_day, "reflection", reflection_text)
+    save_user_data(st.session_state.current_day, "gratitude_1", gratitude_1)
+    save_user_data(st.session_state.current_day, "gratitude_2", gratitude_2)
+    save_user_data(st.session_state.current_day, "gratitude_3", gratitude_3)
+    save_user_data(st.session_state.current_day, "prayer", prayer_text)
+    save_user_data(st.session_state.current_day, "prayed", prayed)
+    save_user_data(st.session_state.current_day, "read_word", read_word)
+    save_user_data(st.session_state.current_day, "worship_music", worship_music)
+    
+    st.success("✨ Your reflection has been saved.")
+
+# Espaço em branco
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
+
+# ============= NAVEGAÇÃO =============
+st.markdown("---")
+
+nav_col1, nav_col2, nav_col3 = st.columns([1, 2, 1])
+
+with nav_col1:
+    if st.button("← Previous", use_container_width=True):
         if st.session_state.current_day > 1:
             st.session_state.current_day -= 1
             st.rerun()
 
-with col_day:
-    st.markdown(f"<h3 style='text-align: center;'>Day {st.session_state.current_day}</h3>", unsafe_allow_html=True)
+with nav_col2:
+    st.markdown(f"<div class='day-counter'>Day {st.session_state.current_day} / 30</div>", unsafe_allow_html=True)
 
-with col_next:
-    if st.button("→", key="next"):
+with nav_col3:
+    if st.button("Next →", use_container_width=True):
         if st.session_state.current_day < 30:
             st.session_state.current_day += 1
             st.rerun()
 
-# Progresso
-st.progress(st.session_state.current_day / 30)
-
-# Dados do dia atual
-day_data = PLANNER_DATA[st.session_state.current_day - 1]
-
-st.markdown(f"## {day_data['title']}")
-
-# Seção do Versículo
+# ============= RODAPÉ =============
 st.markdown(f"""
-<div class="verse-box">
-    <p style="font-weight: bold; color: #4CAF50; margin-bottom: 5px;">📖 {day_data['verse']}</p>
-    <p style="font-style: italic; font-size: 1.1em;">"{day_data['verse_text']}"</p>
+<div class="footer">
+    <p>Created with love for the Lofi Biblical Music community</p>
+    <p>May this journey bring you closer to God's peace and purpose</p>
 </div>
 """, unsafe_allow_html=True)
-
-# Seção de Reflexão
-st.markdown(f"""
-<div class="reflection-box">
-    <p style="font-weight: bold; color: #b8860b; margin-bottom: 5px;">💭 Reflection</p>
-    <p>{day_data['reflection']}</p>
-</div>
-""", unsafe_allow_html=True)
-
-# Perguntas e Journaling
-st.markdown("### 📝 Your Journal")
-for i, q in enumerate(day_data['questions'], 1):
-    st.markdown(f"**{i}. {q}**")
-
-# Campo de texto para notas
-note_key = f"note_{st.session_state.current_day}"
-user_note = st.text_area(
-    "Write your thoughts here...",
-    value=st.session_state.user_notes.get(str(st.session_state.current_day), ""),
-    height=200,
-    key=note_key
-)
-
-# Botão de Salvar
-if st.button("💾 Save My Reflection"):
-    st.session_state.user_notes[str(st.session_state.current_day)] = user_note
-    st.success("Reflection saved! 🙏")
-
-# Seção de Oração
-st.markdown(f"""
-<div class="prayer-box">
-    <p style="font-weight: bold; color: #4169e1; margin-bottom: 5px;">🙏 Closing Prayer</p>
-    <p style="font-style: italic;">{day_data['prayer']}</p>
-</div>
-""", unsafe_allow_html=True)
-
-# Rodapé
-st.markdown("---")
-st.markdown("<p style='text-align: center; color: #7f8c8d; font-size: 0.8em;'>Created for Lofi Biblical Music Community</p>", unsafe_allow_html=True)
